@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>AI DISRUPT PDLC v3.5 — тест с переводами</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --border: #e3e3df;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --accent: #2b5fff;
+    --accent-soft: #eaefff;
+    --good: #1a7f4b;
+    --good-soft: #e6f4ec;
+    --bad: #b3261e;
+    --bad-soft: #fbeae9;
+    --en: #2b5fff;
+    --tr: #777;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 40px 20px 80px; }
+  header.head { margin-bottom: 28px; }
+  header.head h1 { font-size: 26px; line-height: 1.25; margin: 0 0 8px; }
+  header.head p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .legend {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .legend .en { color: var(--en); font-weight: 600; }
+  .legend .tr { color: var(--tr); }
+  .mode-switch {
+    display: inline-flex;
+    margin-top: 18px;
+    padding: 4px;
+    background: #ececea;
+    border-radius: 10px;
+    gap: 2px;
+  }
+  .mode-switch button {
+    font: inherit; font-size: 14px; font-weight: 600;
+    border: 0; background: transparent; color: var(--muted);
+    padding: 8px 14px; border-radius: 7px; cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .mode-switch button:hover { color: var(--ink); }
+  .mode-switch button.active {
+    background: #fff; color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  }
+  .progress-bar {
+    margin-top: 16px; height: 6px;
+    background: #ececea; border-radius: 999px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: var(--accent);
+    transition: width 240ms ease;
+  }
+  .progress-label { margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .q-num {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .q-text { font-size: 17px; line-height: 1.5; margin: 0 0 16px; font-weight: 500; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+    font-size: 15px; line-height: 1.5;
+    background: #fff;
+  }
+  .option:hover { background: #fafafa; }
+  .option input[type="radio"] {
+    margin-top: 3px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .option.selected { background: var(--accent-soft); border-color: var(--accent); }
+  .option.correct { background: var(--good-soft); border-color: var(--good); }
+  .option.incorrect { background: var(--bad-soft); border-color: var(--bad); }
+  .option.disabled { cursor: default; }
+  .explanation {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #fafaf8;
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    font-size: 14px; line-height: 1.55;
+    color: #2a2a2a;
+  }
+  .explanation b { color: var(--ink); }
+  .verdict { margin-top: 12px; font-size: 14px; font-weight: 600; }
+  .verdict.right { color: var(--good); }
+  .verdict.wrong { color: var(--bad); }
+
+  .en { color: var(--en); font-weight: 600; }
+  .tr { color: var(--tr); font-size: 0.92em; }
+  .option .tr, .q-text .tr { font-weight: 400; }
+
+  .actions { margin-top: 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button.primary, button.secondary {
+    font: inherit; padding: 12px 22px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer; font-weight: 600; font-size: 15px;
+    transition: background 120ms ease, opacity 120ms ease;
+  }
+  button.primary { background: var(--accent); color: #fff; }
+  button.primary:disabled { background: #c8c8c4; color: #fff; cursor: not-allowed; }
+  button.primary:not(:disabled):hover { background: #1f4eea; }
+  button.secondary { background: #fff; color: var(--ink); border-color: var(--border); }
+  button.secondary:hover { background: #f3f3f0; }
+  .results {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    display: none;
+  }
+  .results.show { display: block; }
+  .results h2 { margin: 0 0 6px; font-size: 22px; }
+  .results .score-line { font-size: 15px; color: var(--muted); margin: 0; }
+  .results .score-num { color: var(--ink); font-weight: 700; }
+  .results .verdict-final { margin-top: 10px; font-size: 15px; line-height: 1.45; }
+  footer.foot { margin-top: 28px; font-size: 12px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <h1>AI DISRUPT PDLC v3.5 — мини-тест с переводами</h1>
+    <p>Вопросы на ключевые идеи концепции. Англицизмы оставлены в исходном виде (это рабочий жаргон индустрии), перевод даётся в скобках после термина.</p>
+    <div class="legend">
+      Обозначения: <span class="en">harness</span> <span class="tr">(перевод)</span> — англицизм и его русский эквивалент.
+    </div>
+    <div class="mode-switch" role="tablist">
+      <button type="button" data-mode="test" class="active">Тест · 6 случайных</button>
+      <button type="button" data-mode="trainer">Тренажёр · все 20</button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">Отвечено: 0 из 6</div>
+  </header>
+
+  <div class="results" id="results"></div>
+  <form id="quiz"></form>
+
+  <div class="actions">
+    <button type="button" class="primary" id="submitBtn" disabled>Принять</button>
+    <button type="button" class="secondary" id="resetBtn">Сбросить и перемешать</button>
+  </div>
+
+  <footer class="foot">Тест по выжимке AI DISRUPT PDLC v3.5 · Кирилл Меньшов, апрель 2026</footer>
+</div>
+
+<script>
+// Helper for inline term + translation
+function t(en, tr) { return '<span class="en">' + en + '</span> <span class="tr">(' + tr + ')</span>'; }
+
+const QUESTIONS = [
+  {
+    id: "harness-over-model",
+    text: "В чём, согласно v3.5, главный источник долгосрочного конкурентного преимущества организации?",
+    options: [
+      { text: 'Выбор лучшей ' + t('LLM', 'большой языковой модели') + ' на рынке', correct: false },
+      { text: 'Детерминированный ' + t('harness', 'управляющий слой над моделью') + ' вокруг модели: ' + t('permission gates', 'шлюзы разрешений') + ', ' + t('hooks', 'перехватчики') + ', ' + t('evals', 'автотесты качества') + ', аудит', correct: true },
+      { text: "Объём собственных данных для дообучения моделей", correct: false },
+      { text: "Скорость миграции на каждую новую версию модели", correct: false }
+    ],
+    explanation: '<b>Harness > Model.</b> Модели у всех плюс-минус одинаковые и устаревают каждые полгода, а ' + t('harness', 'обвязка') + ' — это инженерный капитал, который накапливается: permission gates, hooks, sandbox ' + t('', 'песочница').replace('<span class="en"></span> ','') + ', audit, evals. Это главный тезис v3.5.'
+  },
+  {
+    id: "subagents-isolation",
+    text: 'Зачем в концепции v3.5 нужны ' + t('subagents', 'подагенты, выделенные под подзадачи') + '?',
+    options: [
+      { text: "Чтобы запускать больше задач параллельно и тем самым ускорить разработку", correct: false },
+      { text: "Чтобы каждая продуктовая команда работала со своим выделенным агентом", correct: false },
+      { text: 'Для изоляции прав, контекста и аудита между ролями (например, ' + t('security-ревью', 'ревью безопасности') + ' с урезанными правами)', correct: true },
+      { text: "Чтобы иметь резервного агента на случай отказа основного", correct: false }
+    ],
+    explanation: '<b>Subagents as isolation</b> ' + t('', 'подагенты как изоляция').replace('<span class="en"></span> ','') + '. Это не «много агентов ради скорости», а способ развести права, контекст и аудит между ролями. Тот же мотив, что и принцип наименьших привилегий в безопасности.'
+  },
+  {
+    id: "productivity-paradox",
+    text: 'Что показало рандомизированное ' + t('RCT', 'randomized controlled trial — контролируемое') + '-исследование Anthropic 2026 года про разработчиков, активно использующих ИИ?',
+    options: [
+      { text: "Группа с ИИ показала −17% на тестах мастерства — критично, КАК используют, а не используют ли", correct: true },
+      { text: "Группа с ИИ работала на 35% быстрее, и качество кода было таким же", correct: false },
+      { text: "Положительный эффект ИИ виден только в командах из 10+ человек", correct: false },
+      { text: "Юниоры теряют скорость, сеньоры её, наоборот, приобретают", correct: false }
+    ],
+    explanation: '<b>Парадокс продуктивности.</b> Быстрее ≠ лучше как инженер. Антидоты — паттерн ' + t('generation-then-comprehension', 'сгенерировать → разобраться') + ', объяснение сгенерированного кода и обязательные «спринты ручного кодирования» против деградации навыков.'
+  },
+  {
+    id: "risk-ladder-r3",
+    text: 'На каком уровне риска в шкале R0–R5 находится код, работающий с ' + t('auth', 'аутентификацией') + ', платежами и ' + t('PII', 'персональными данными') + '?',
+    options: [
+      { text: 'R1 — авто-выполнение с ' + t('hooks', 'перехватчиками'), correct: false },
+      { text: 'R2 — ' + t('PR', 'pull request — запрос на слияние') + ' от агента + ревью человека', correct: false },
+      { text: 'R3 — черновик от агента + обязательное ' + t('security-ревью', 'ревью безопасности'), correct: true },
+      { text: 'R5 — обязательный ' + t('change advisory', 'совет по изменениям') + ' и полный аудит-пакет', correct: false }
+    ],
+    explanation: '<b>R3</b> — auth, payments, PII, инфра. R5 — это уровень регулируемых моделей и риск-логики. ' + t('Blast radius', 'масштаб последствий') + ', стадия SDLC, классификация данных и регуляторный контур вычисляются автоматически.'
+  },
+  {
+    id: "hooks-vs-claudemd",
+    text: 'Почему ' + t('compliance', 'соответствие требованиям') + ' нельзя обеспечивать только инструкциями в CLAUDE.md / AGENTS.md?',
+    options: [
+      { text: "Эти файлы слишком быстро устаревают и их сложно поддерживать", correct: false },
+      { text: 'Текстовые инструкции — это ' + t('guidance', 'рекомендация') + ', а не ' + t('enforcement', 'принуждение') + ': модель может их проигнорировать или не заметить. Реально принуждает только ' + t('hook', 'перехватчик') + ' на уровне ' + t('runtime', 'исполнения'), correct: true },
+      { text: "Эти файлы видны не всем агентам в команде", correct: false },
+      { text: "В них нельзя описывать политики безопасности по требованию SOC 2", correct: false }
+    ],
+    explanation: '<b>Guidance ≠ enforcement.</b> CLAUDE.md/AGENTS.md — это инструкции, которым модель может следовать или нет. Hooks перехватывают действия на уровне runtime и реально блокируют их. Compliance строится только на hooks.'
+  },
+  {
+    id: "approval-fatigue",
+    text: 'Какой факт делает ' + t('governance', 'управление и контроль') + ', построенный на «человек нажмёт yes/no», нерабочим?',
+    options: [
+      { text: 'Около 93% ' + t('prompts', 'запросов на одобрение') + ' одобряются без изучения содержания', correct: true },
+      { text: "Модель умеет манипулировать пользователем через формулировки запросов", correct: false },
+      { text: "Люди боятся нажимать «нет», чтобы не остановить релиз", correct: false },
+      { text: 'UI ' + t('approval', 'диалогов подтверждения') + ' плохо спроектирован и сбивает с толку', correct: false }
+    ],
+    explanation: '<b>' + t('Approval fatigue', 'усталость от подтверждений') + '.</b> 93% одобрений без чтения — приговор любой governance-схеме, рассчитанной на внимательный клик человека. Плюс отдельный риск: цепочки из 50+ ' + t('subcommands', 'подкоманд') + ' схлопываются в один общий approval, обходя гранулярные проверки.'
+  },
+  {
+    id: "nonlinear-scenarios",
+    text: 'Сколько сценариев ' + t('SDLC', 'жизненного цикла разработки ПО') + ' должно быть покрыто ИИ для нелинейного прироста скорости?',
+    options: [
+      { text: "1–2: главное — начать, дальше эффект сам нарастает", correct: false },
+      { text: "3–5: оптимальное соотношение затрат и эффекта", correct: false },
+      { text: "≥10: даёт рост у 66% компаний против 35% при <5 сценариях", correct: true },
+      { text: "Не менее 20, иначе эффект внутри метрик неразличим", correct: false }
+    ],
+    explanation: '<b>Эффект порога.</b> Точечные пилоты почти не двигают метрики — критичен охват: ≥10 сценариев даёт качественный сдвиг. Это аргумент против стратегии «выдадим Copilot ' + t('', 'ИИ-ассистент кода').replace('<span class="en"></span> ','') + ' и посмотрим».'
+  },
+  {
+    id: "two-categories",
+    text: "На какие две категории v3.5 делит тему ИИ в разработке?",
+    options: [
+      { text: 'Augmented ' + t('', 'дополненный').replace('<span class="en"></span> ','') + ' и Native ' + t('', 'нативный').replace('<span class="en"></span> ','') + ' — по степени трансформации процессов', correct: false },
+      { text: t('AI in the SDLC', 'ИИ в нашей разработке') + ' и ' + t('SDLC for AI', 'разработка под AI-приложения'), correct: true },
+      { text: t('Code Generation', 'генерация кода') + ' и ' + t('Code Review', 'ревью кода') + ' — по этапам жизненного цикла', correct: false },
+      { text: t('On-premise', 'на своих серверах') + ' и ' + t('Cloud', 'облако') + ' — по способу деплоя инструментов', correct: false }
+    ],
+    explanation: '<b>Двойственная категоризация.</b> Это не «один SDLC с ИИ», а две разные дисциплины: меняем свою разработку (AI in the SDLC) и доставляем AI-продукты с ' + t('reliability', 'надёжностью') + ' и ' + t('alignment', 'согласованностью целей') + ' в ядре (SDLC for AI).'
+  },
+  {
+    id: "two-loops",
+    text: 'Чем связаны ' + t('Intent Loop', 'петля намерения') + ' и ' + t('Implementation Loop', 'петля реализации') + ' в двухпетлевой PDLC?',
+    options: [
+      { text: t('Pull request', 'запрос на слияние') + ' и ' + t('code review', 'ревью кода'), correct: false },
+      { text: 'Спецификацией (' + t('SDD', 'Software Design Document — документ требований') + ') и ' + t('evidence bundle', 'доказательным пакетом'), correct: true },
+      { text: t('CI/CD pipeline', 'конвейер непрерывной интеграции и доставки') + ' и ' + t('production deployment', 'развёртывание в проде'), correct: false },
+      { text: 'Прямой передачей ' + t('промпта', 'инструкции для модели') + ' от продакта к инженеру', correct: false }
+    ],
+    explanation: '<b>Два артефакта на стыке петель.</b> На входе в Implementation Loop — спецификация (что хотим), на выходе — evidence bundle (что и как сделано). Без этих двух артефактов модель сворачивается обратно в линейный SDLC.'
+  },
+  {
+    id: "evidence-bundle",
+    text: 'Что такое ' + t('evidence bundle', 'доказательный пакет') + ' в AI DISRUPT PDLC?',
+    options: [
+      { text: "Архив всех логов агента за рабочую сессию", correct: false },
+      { text: "Обязательный артефакт завершения агентной задачи: тесты, проверки, обоснование решений", correct: true },
+      { text: "Снапшот контекстного окна для отладки", correct: false },
+      { text: "Резервная копия всех промптов сессии для аудита", correct: false }
+    ],
+    explanation: '<b>Evidence bundle.</b> Это не лог и не дамп, а структурированное доказательство, что задача выполнена корректно: какие тесты пройдены, какие проверки выполнены, почему выбран этот путь. Один из ' + t('gate', 'проходных') + '-критериев перехода на H2 — ' + t('completeness', 'полнота') + ' ≥95%.'
+  },
+  {
+    id: "eval-driven",
+    text: 'Когда в ' + t('Eval-Driven Development', 'разработке через эвалы') + ' строятся ' + t('evals', 'автотесты качества') + '?',
+    options: [
+      { text: "Параллельно с разработкой агента — по мере появления функций", correct: false },
+      { text: "После выпуска в прод — на основании реальных данных", correct: false },
+      { text: 'До агентов — как ' + t('fitness functions', 'функции приспособленности') + ', задающие целевое поведение', correct: true },
+      { text: 'Только при подготовке к ' + t('compliance', 'регуляторному') + '-аудиту', correct: false }
+    ],
+    explanation: '<b>Сначала evals, потом агент.</b> Это аналог ' + t('TDD', 'test-driven development — разработки через тесты') + ' на новом уровне: evals — это fitness-функция, которой агент должен соответствовать. Решения о выборе модели также принимаются только по собственным evals, а не по публичным ' + t('лидербордам', 'рейтингам') + '.'
+  },
+  {
+    id: "tiny-teams",
+    text: 'Команда какого размера в модели ' + t('Tiny Teams', 'компактные команды') + ' с агентами заменяет команду из 10–15 человек?',
+    options: [
+      { text: "5–7 человек", correct: false },
+      { text: "2–3 человека", correct: true },
+      { text: '1 человек — полностью автономный ' + t('engineer-of-one', 'инженер-одиночка'), correct: false },
+      { text: "Размер не уменьшается — улучшается только координация", correct: false }
+    ],
+    explanation: '<b>Tiny Teams.</b> 2–3 человека + агенты делают работу команды 10–15. Координационный ' + t('overhead', 'накладные расходы') + ' падает с 30–40% до 5–10% — меньше передач между людьми, больше передач «человек ↔ агент».'
+  },
+  {
+    id: "guardian-agent-engineer",
+    text: 'Чем занимается ' + t('Guardian Agent Engineer', 'инженер агентов-стражей') + ' в команде v3.5?',
+    options: [
+      { text: 'Поддерживает ' + t('Agent Runtime', 'среду исполнения агента') + ', ' + t('sandbox', 'песочницу') + ' и ' + t('recovery', 'восстановление'), correct: false },
+      { text: 'Пишет ' + t('hooks', 'перехватчики') + ' и ' + t('policy-as-code', 'политики как код') + ', обеспечивающие политики на уровне ' + t('runtime', 'исполнения'), correct: true },
+      { text: 'Отвечает за жизненный цикл AGENTS.md, ' + t('skills', 'переиспользуемых навыков') + ' и ' + t('evals', 'эвалов'), correct: false },
+      { text: 'Реагирует на ' + t('CVE', 'публичные уязвимости') + ' и атаки ' + t('prompt injection', 'внедрения инструкций через промпт'), correct: false }
+    ],
+    explanation: '<b>Разделение ролей в harness-команде.</b> Guardian Agent Engineer — про hooks/policy. ' + t('Harness Platform Engineer', 'инженер платформы harness') + ' — про runtime/sandbox/recovery. ' + t('Context Supply Chain Owner', 'владелец цепочки поставки контекста') + ' — про lifecycle AGENTS.md/skills. ' + t('AI Security Officer', 'специалист по AI-безопасности') + ' — про risk ladder и CVE.'
+  },
+  {
+    id: "idp-core",
+    text: 'Что является ядром пятистолпной архитектуры ' + t('IDP', 'Integrated Development Platform — интегрированной платформы разработки') + '?',
+    options: [
+      { text: t('Self-service & Extensibility', 'самообслуживание и расширяемость') + ' — плагины, ' + t('skills', 'навыки') + ', ' + t('MCP', 'Model Context Protocol — стандарт подключения инструментов') + '-реестр', correct: false },
+      { text: t('Agent Runtime', 'среда исполнения агента') + ' / ' + t('Deterministic Harness', 'детерминированная обвязка'), correct: true },
+      { text: t('Golden Path', 'золотой путь') + ' с ' + t('SDD', 'Software Design Document') + '-шаблонами и AGENTS.md', correct: false },
+      { text: t('Observability & AgentOps', 'наблюдаемость и операции с агентами') + ' с ' + t('JSONL', 'json-lines, по записи на строку') + '-аудитом', correct: false }
+    ],
+    explanation: '<b>Harness — ядро.</b> Agent Runtime отвечает за единый ' + t('agent loop', 'цикл агента') + ', диспетчер инструментов, ' + t('permission gateway', 'шлюз разрешений') + ', sandbox и recovery. Остальные четыре столпа — вокруг него.'
+  },
+  {
+    id: "paved-roads",
+    text: 'В чём смысл паттерна ' + t('Paved Roads', 'проложенные дороги') + '?',
+    options: [
+      { text: "Все альтернативные пути запрещены политикой безопасности", correct: false },
+      { text: 'Это полностью автоматизированный ' + t('пайплайн', 'конвейер') + ' без участия человека', correct: false },
+      { text: "По выбранному пути максимум поддержки от ИИ; съехать с него можно, но дороже и без поддержки", correct: true },
+      { text: 'Это набор обязательных проверок в ' + t('CI/CD', 'непрерывной интеграции и доставки') + ', которые нельзя отключить', correct: false }
+    ],
+    explanation: '<b>' + t('Pull, not push', 'тянуть, а не толкать') + '.</b> Платформа не запрещает альтернативы, но делает движение по «проложенной дороге» настолько комфортным, что съезжать невыгодно. Это продуктовая, а не административная мера.'
+  },
+  {
+    id: "pre-trust-window",
+    text: 'В чём суть угрозы ' + t('Pre-trust initialization window', 'окно инициализации до подтверждения доверия') + ' (CVE-2025-59536)?',
+    options: [
+      { text: 'Атакующий получает доступ к ' + t('API', 'программному интерфейсу') + '-ключам через переменные окружения', correct: false },
+      { text: t('Hooks', 'перехватчики') + ' и ' + t('MCP', 'Model Context Protocol') + '-серверы успевают запуститься до того, как пользователь подтвердит доверие проекту', correct: true },
+      { text: "Модель отвечает до окончания загрузки контекста и выдаёт некорректные результаты", correct: false },
+      { text: 'Утечка ' + t('системного промпта', 'базовой инструкции для модели') + ' при первом запуске агента', correct: false }
+    ],
+    explanation: '<b>Окно эксплуатации — секунды, риск реальный.</b> Когда вы открываете чужой репозиторий или новый проект, цепочка инициализации может выполнить код раньше, чем вы успеете подтвердить доверие. Это аргумент за ' + t('deny-first', 'по умолчанию запрещено') + ' защиту на уровне harness.'
+  },
+  {
+    id: "context-supply-chain",
+    text: 'Что v3.5 называет ' + t('Context Supply Chain', 'цепочка поставки контекста') + '?',
+    options: [
+      { text: "Цепочку поставки моделей от вендора до прод-окружения", correct: false },
+      { text: 'AGENTS.md, ' + t('skills', 'навыки') + ' и ' + t('evals', 'эвалы') + ' как ' + t('supply-chain', 'поставочные') + ' объекты — с ' + t('owner', 'владельцем') + ', ' + t('validity', 'сроком валидности') + ', ' + t('scope', 'областью') + ' и ' + t('eval coverage', 'покрытием эвалами'), correct: true },
+      { text: 'Пайплайн доставки данных в ' + t('RAG', 'retrieval-augmented generation — генерация с поиском') + '-систему', correct: false },
+      { text: "Общий кэш контекста между несколькими агентами одной команды", correct: false }
+    ],
+    explanation: '<b>Контекст — это supply chain.</b> Любой текст, который ест агент, влияет на его поведение. Поэтому AGENTS.md/skills/evals требуют владельца, срока валидности и регулярного ревью — как любые supply-chain артефакты.'
+  },
+  {
+    id: "reliability-80",
+    text: 'Какая доля ' + t('lead time', 'времени от идеи до прода') + ' в разработке AI-агентов уходит на ' + t('reliability', 'надёжность') + ' и доверие?',
+    options: [
+      { text: "~20% — большая часть на бизнес-функциональность", correct: false },
+      { text: "~50% — поровну с основной разработкой", correct: false },
+      { text: "До 80% — самая недооценённая категория метрик", correct: true },
+      { text: "~10% — почти всё автоматизируют evals", correct: false }
+    ],
+    explanation: '<b>Reliability ест время.</b> До 80% lead time агентного проекта — это не «фича», а доверие: воспроизводимость, наблюдаемость, обработка ' + t('edge-кейсов', 'крайних случаев') + ', согласие комплаенса. Тот, кто строит планы по 20%, систематически промахивается по срокам.'
+  },
+  {
+    id: "leaderboard-noise",
+    text: 'Почему v3.5 рекомендует не принимать решение о выборе модели по публичным ' + t('бенчмаркам', 'тестовым наборам') + '?',
+    options: [
+      { text: "Бенчмарки тренируются на тех же данных, что и модели — нет независимости", correct: false },
+      { text: t('Инфраструктурный шум', 'шум от железа и окружения') + ' — до 6 п.п.; разница <3% между моделями статистически незначима, решать надо по собственным стандартизированным ' + t('evals', 'автотестам качества'), correct: true },
+      { text: "Бенчмарки устаревают быстрее, чем выходят модели", correct: false },
+      { text: "Вендоры намеренно подгоняют модели под топовые бенчмарки", correct: false }
+    ],
+    explanation: '<b>Шум >> сигнала.</b> Публичные рейтинги дают слишком зашумлённый сигнал для бизнес-решений. Свой набор evals на типовых задачах организации — единственный надёжный способ сравнивать модели.'
+  },
+  {
+    id: "h2-gate",
+    text: 'Что среди условий перехода с горизонта H1 на H2 (после 90-дневного ' + t('MVP', 'minimum viable product — минимально жизнеспособный продукт') + ')?',
+    options: [
+      { text: t('AI Task Completion Rate', 'доля задач, выполненных с ИИ') + ' >80% и снижение бюджета на разработку', correct: false },
+      { text: t('Evidence bundle completeness', 'полнота доказательного пакета') + ' ≥95%, ' + t('hook-block rate', 'частота срабатывания блокирующих хуков') + ' >0, ' + t('DORA Lead Time', 'метрика lead time из DORA') + ' не регрессирует, бюджет в плане', correct: true },
+      { text: 'Полное покрытие тестами всех агентных ' + t('workflow', 'процессов'), correct: false },
+      { text: 'Сертификация платформы по ' + t('ISO/IEC 42001', 'стандарт системы менеджмента ИИ'), correct: false }
+    ],
+    explanation: '<b>Gate как проверка зрелости.</b> Ворота к H2 — это не «всё хорошо», а конкретные измеримые сигналы: агент сдаёт evidence bundle почти всегда, хуки реально что-то блокируют (значит политики работают), классическая DORA-метрика lead time не просела, бюджет под контролем.'
+  }
+];
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const TEST_SIZE = 6;
+
+const form = document.getElementById("quiz");
+const submitBtn = document.getElementById("submitBtn");
+const resetBtn = document.getElementById("resetBtn");
+const progressFill = document.getElementById("progressFill");
+const progressLabel = document.getElementById("progressLabel");
+const resultsEl = document.getElementById("results");
+const modeButtons = document.querySelectorAll(".mode-switch button");
+
+let state = { mode: "test", questions: [], answers: {}, submitted: false };
+
+function render() {
+  const pool = shuffle(QUESTIONS);
+  const picked = state.mode === "test" ? pool.slice(0, TEST_SIZE) : pool;
+  state.questions = picked.map(q => ({
+    ...q,
+    options: shuffle(q.options)
+  }));
+  state.answers = {};
+  state.submitted = false;
+  resultsEl.classList.remove("show");
+  resultsEl.innerHTML = "";
+
+  modeButtons.forEach(b => {
+    b.classList.toggle("active", b.dataset.mode === state.mode);
+  });
+
+  form.innerHTML = "";
+  state.questions.forEach((q, qi) => {
+    const card = document.createElement("div");
+    card.className = "q-card";
+    card.dataset.qid = q.id;
+    card.innerHTML =
+      '<div class="q-num">Вопрос ' + (qi + 1) + ' из ' + state.questions.length + '</div>' +
+      '<p class="q-text">' + q.text + '</p>' +
+      '<div class="options"></div>';
+    const optsEl = card.querySelector(".options");
+    q.options.forEach((opt, oi) => {
+      const label = document.createElement("label");
+      label.className = "option";
+      label.innerHTML =
+        '<input type="radio" name="q_' + q.id + '" value="' + oi + '">' +
+        '<span>' + opt.text + '</span>';
+      const input = label.querySelector("input");
+      input.addEventListener("change", () => {
+        state.answers[q.id] = oi;
+        optsEl.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+        label.classList.add("selected");
+        updateProgress();
+      });
+      optsEl.appendChild(label);
+    });
+    form.appendChild(card);
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = state.questions.length;
+  const answered = Object.keys(state.answers).length;
+  progressFill.style.width = (answered / total * 100) + '%';
+  progressLabel.textContent = 'Отвечено: ' + answered + ' из ' + total;
+  submitBtn.disabled = answered < total || state.submitted;
+}
+
+function grade() {
+  state.submitted = true;
+  resetBtn.textContent = state.mode === "test" ? "Пройти заново" : "Сбросить и перемешать";
+  let score = 0;
+  state.questions.forEach(q => {
+    const card = form.querySelector('.q-card[data-qid="' + q.id + '"]');
+    const optsEls = card.querySelectorAll(".option");
+    const userIdx = state.answers[q.id];
+    const userCorrect = q.options[userIdx].correct;
+    if (userCorrect) score++;
+
+    optsEls.forEach((el, oi) => {
+      const input = el.querySelector("input");
+      input.disabled = true;
+      el.classList.add("disabled");
+      el.classList.remove("selected");
+      if (q.options[oi].correct) el.classList.add("correct");
+      else if (oi === userIdx) el.classList.add("incorrect");
+    });
+
+    const verdict = document.createElement("div");
+    verdict.className = "verdict " + (userCorrect ? "right" : "wrong");
+    verdict.textContent = userCorrect ? "✓ Верно" : "✗ Неверно";
+    card.appendChild(verdict);
+
+    const exp = document.createElement("div");
+    exp.className = "explanation";
+    exp.innerHTML = q.explanation;
+    card.appendChild(exp);
+  });
+
+  const total = state.questions.length;
+  const ratio = score / total;
+  let verdictText;
+  if (score === total) verdictText = "Идеально — материал освоен на уровне «могу преподавать».";
+  else if (ratio >= 0.83) verdictText = "Хороший результат. Несколько нюансов стоит уточнить по выжимке.";
+  else if (ratio >= 0.5) verdictText = "Базу схватили, но ключевые отличия концепции стоит перечитать.";
+  else verdictText = "Стоит вернуться к выжимке — основная логика v3.5 пока не сложилась.";
+
+  resultsEl.innerHTML =
+    '<h2>Результат: <span class="score-num">' + score + ' из ' + total + '</span></h2>' +
+    '<p class="score-line">Разбор каждого вопроса — ниже, под карточками.</p>' +
+    '<p class="verdict-final">' + verdictText + '</p>';
+  resultsEl.classList.add("show");
+  submitBtn.disabled = true;
+  resultsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+submitBtn.addEventListener("click", grade);
+resetBtn.addEventListener("click", () => {
+  render();
+  resetBtn.textContent = "Сбросить и перемешать";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+modeButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const nextMode = btn.dataset.mode;
+    if (nextMode === state.mode && !state.submitted && Object.keys(state.answers).length === 0) return;
+    state.mode = nextMode;
+    render();
+    resetBtn.textContent = "Сбросить и перемешать";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+
+render();
+</script>
+</body>
+</html>
